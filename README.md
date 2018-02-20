@@ -10,13 +10,15 @@ token = token-goes-here
 
 ## Features to add
 * Weekly Report Submission
-* BunCoin
-* Ask a Tech Lead/Manager
+* BunCoin - Karma with value
+* BunCoin Auctions
+* Ask a Tech Lead/Manager process
 * Personality
 * Link Collections
-* Witties
+* Witties (Automated responses to keywords)
 * In-line Salesforce case summaries
 * Case assignment via Slack
 * Personal dashboard
 * Groups/Roles for pinging
 * Event scheduling
+* Ping when a case updates
