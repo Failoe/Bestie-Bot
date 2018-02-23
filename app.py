@@ -174,4 +174,4 @@ def send_message(channel_id, message):
     )
 
 if __name__ == '__main__':
-    app.run(port=int(config['Flask']['port']), debug=True)
+    app.run(host=config['Flask']['host'], port=int(config['Flask']['port']), debug=True)

@@ -1,1 +1,3 @@
 slackclient
+pyaml
+flask
