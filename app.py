@@ -7,7 +7,9 @@ import json
 import bot
 from flask import Flask, request, make_response, render_template
 import configparser
+import requests
 from pprint import pprint
+from bestie_utils.db_utils import *
 
 pyBot = bot.Bot()
 slack = pyBot.client
@@ -17,6 +19,9 @@ app = Flask(__name__)
 config = configparser.ConfigParser()
 config.read('bestie.config')
 
+bc_emoji = config['BestCoin']['emoji']
+
+test_count = 0
 
 def _event_handler(event_type, slack_event):
     """
@@ -61,9 +66,17 @@ def _event_handler(event_type, slack_event):
     # If the user has added an emoji reaction to the onboarding message
     elif event_type == "reaction_added":
         user_id = slack_event["event"]["user"]
+        reaction_emoji = slack_event['event']['reaction']
+        print("{} added {} emoji to the post.".format(user_id, reaction_emoji))
         # Update the onboarding message
-        pyBot.update_emoji(team_id, user_id)
-        return make_response("Welcome message updates with reactji", 200,)
+        # pyBot.update_emoji(team_id, user_id)
+        return make_response("Reaction added", 200,)
+
+    elif event_type == 'reaction_removed':
+        user_id = slack_event["event"]["user"]
+        reaction_emoji = slack_event['event']['reaction']
+        print("{} removed {} emoji from the post.".format(user_id, reaction_emoji))
+        return make_response("Reaction removed", 200,)
 
     # =============== Pin Added Events ================ #
     # If the user has added an emoji reaction to the onboarding message
@@ -78,17 +91,30 @@ def _event_handler(event_type, slack_event):
     elif event_type == "message" and slack_event['event'].get('subtype') != 'bot_message':
         # This limits messages to the bot-testing channel
         if slack_event['event']['channel'] == 'C98LD3BGV':
+            user_id = slack_event["event"].get("user")
+
             if slack_event['event']['text'].startswith("What's good?"):
                 send_message(slack_event['event']['channel'], 'Nothin\' much homie.')
                 return make_response("Informed users what is good", 200,)
+            
+            # Onboarding message test
+            elif slack_event['event']['text'] == "Onboarding Test":
+                pyBot.onboarding_message(team_id, user_id)
+                return make_response("Onboarding message sent", 200)
 
-            send_message(slack_event['event']['channel'], 'Reeeee.')
-            # user_id = slack_event["event"].get("user")
+            # Form test
+            elif slack_event['event']['text'] == "Form":
+                post_message = pyBot.send_form(team_id, user_id, slack_event)
+                return make_response("Test form sent", 200)
+
+            # test_count += 1
+            send_message(slack_event['event']['channel'], "Responding to: {}\nOriginal post at: {}".format(
+                slack_event['event']['text'],
+                slack_event['event']['ts']))
             # if slack_event["event"]["attachments"][0].get("is_share"):
             #     # Update the onboarding message and check off "Share this Message"
             #     pyBot.update_share(team_id, user_id)
-            return make_response("Message received",
-                                    200,)
+            return make_response("Message received", 200,)
 
     # ============= Event Type Not Found! ============= #
     # If the event_type does not have a handler
@@ -125,13 +151,14 @@ def thanks():
     return render_template("thanks.html")
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/listening", methods=["GET", "POST"])
 def hears():
     """
     This route listens for incoming events from Slack and uses the event
     handler helper function to route events to our Bot.
     """
     slack_event = json.loads(request.data)
+    print("/listening output")
     pprint(slack_event)
     # ============= Slack URL Verification ============ #
     # In order to verify the url of our endpoint, Slack will send a challenge
@@ -158,11 +185,28 @@ def hears():
     if "event" in slack_event:
         event_type = slack_event["event"]["type"]
         # Then handle the event by event_type and have your bot respond
+        # if slack_event['event'].get('subtype') != 'bot_message':
+        #     print("Bot message stopped.")
+        #     return make_response("Stopped bot message.", 200)
         return _event_handler(event_type, slack_event)
     # If our bot hears things that are not events we've subscribed to,
     # send a quirky but helpful error response
     return make_response("[NO EVENT IN SLACK REQUEST] These are not the droids\
                          you're looking for.", 404, {"X-Slack-No-Retry": 1})
+
+
+@app.route("/interact", methods=["GET", "POST"])
+def interact():
+    slack_event = request.json
+    print("EVENT RECEIVED 0")
+    pprint(slack_event)
+    print("EVENT RECEIVED 1")
+    return make_response("Form received", 200)
+
+
+@app.route("/outgoinghook", methods=["GET", "POST"])
+def outgoinghook():
+    print("Exclamation Point Received")
 
 
 def send_message(channel_id, message):

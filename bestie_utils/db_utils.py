@@ -4,7 +4,7 @@ import configparser
 
 def pgsql_connect():
 	config = configparser.ConfigParser()
-	config.read('tracker.config')
+	config.read('bestie.config')
 	conn = psycopg2.connect(
 		database=config['PostgreSQL']['database'],
 		user=config['PostgreSQL']['user'],

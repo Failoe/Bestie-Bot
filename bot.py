@@ -5,6 +5,8 @@ Python Slack Bot class for use with the pythOnBoarding app
 import os
 import message
 import configparser
+import yaml
+from pprint import pprint
 
 from slackclient import SlackClient
 
@@ -248,3 +250,53 @@ class Bot(object):
                                             )
         # Update the timestamp saved on the message object
         message_obj.timestamp = post_message["ts"]
+
+
+    def send_form(self, team_id, user_id, message):
+        post_message = self.client.api_call("chat.postMessage",
+                                                channel=message['event']['channel'],
+                                                ts=message['event']['ts'],
+                                                text="Would you like to play a game?",
+                                                icon_emoji=':bp:',
+                                                attachments=[
+        {
+            "title": "The Further Adventures of Slackbot",
+            "fields": [
+                {
+                    "title": "Volume",
+                    "value": "1",
+                    "short": 'true'
+                },
+                {
+                    "title": "Issue",
+                    "value": "3",
+            "short": 'true'
+                }
+            ],
+            "author_name": "Stanford S. Strickland",
+            "author_icon": "https://a.slack-edge.com/bfaba/img/api/homepage_custom_integrations-2x.png",
+            "image_url": "http://i.imgur.com/OJkaVOI.jpg?1"
+        },
+        {
+            "fallback": "Would you recommend it to customers?",
+            "title": "Would you recommend it to customers?",
+            "callback_id": "comic_1234_xyz",
+            "color": "#3AA3E3",
+            "attachment_type": "default",
+            "actions": [
+                {
+                    "name": "recommend",
+                    "text": "Recommend",
+                    "type": "button",
+                    "value": "recommend"
+                },
+                {
+                    "name": "no",
+                    "text": "No",
+                    "type": "button",
+                    "value": "bad"
+                }
+            ]
+        }
+    ])
+        pprint(post_message)
