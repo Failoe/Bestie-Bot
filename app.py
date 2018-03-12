@@ -10,6 +10,7 @@ import configparser
 import requests
 from pprint import pprint
 from bestie_utils.db_utils import *
+from bestie_utils.collections import *
 
 pyBot = bot.Bot()
 slack = pyBot.client
@@ -92,8 +93,23 @@ def _event_handler(event_type, slack_event):
         # This limits messages to the bot-testing channel
         if slack_event['event']['channel'] == 'C98LD3BGV':
             user_id = slack_event["event"].get("user")
-
-            if slack_event['event']['text'].startswith("What's good?"):
+            event_text = slack_event['event'].get('text')
+            if event_text.startswith('!'):
+                if event_text.startswith('!add '):
+                    tag_conn = pgsql_connect('bestie.config')
+                    add_tag(tag_conn, slack_event)
+                    tag_conn.close()
+                elif event_text.startswith('!remove '):
+                    tag_conn = pgsql_connect('bestie.config')
+                    remove_tag(tag_conn, slack_event)
+                    tag_conn.close()
+                elif event_text.startswith('!pick '):
+                    tag_conn = pgsql_connect('bestie.config')
+                    send_message(   slack_event['event']['channel'],
+                                    pick_item(tag_conn, slack_event)
+                                )
+                    tag_conn.close()
+            elif slack_event['event']['text'].startswith("What's good?"):
                 send_message(slack_event['event']['channel'], 'Nothin\' much homie.')
                 return make_response("Informed users what is good", 200,)
             
@@ -108,9 +124,11 @@ def _event_handler(event_type, slack_event):
                 return make_response("Test form sent", 200)
 
             # test_count += 1
-            send_message(slack_event['event']['channel'], "Responding to: {}\nOriginal post at: {}".format(
-                slack_event['event']['text'],
-                slack_event['event']['ts']))
+
+
+            # send_message(slack_event['event']['channel'], "Responding to: {}\nOriginal post at: {}".format(
+            #     slack_event['event']['text'],
+            #     slack_event['event']['ts']))
             # if slack_event["event"]["attachments"][0].get("is_share"):
             #     # Update the onboarding message and check off "Share this Message"
             #     pyBot.update_share(team_id, user_id)
